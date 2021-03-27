@@ -1,62 +1,35 @@
 import React, { Component } from 'react';
-import { v1 as uuidv1 } from 'uuid';
+import { v1 as uuidv4 } from 'uuid';
 import s from './App.module.css';
-import ContactForm from './ContactForm/ContactForm';
-import Filter from './Filter/Filter';
-import ContactList from './ContactList/ContactList';
-import PropTypes from 'prop-types';
+import ContactForm from './components/ContactForm/ContactForm';
+import Filter from './components/Filter/Filter';
+import ContactList from './components/ContactList/ContactList';
+import contactsData from './components/ContactsData/contacts.json';
 
 class App extends Component {
-  static defaultProps = {
-    contacts: [],
-    name: '',
-    number: '',
-  };
-
-  static propTypes = {
-    contacts: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.string.isRequired,
-        name: PropTypes.string,
-        number: PropTypes.string,
-      }),
-    ),
-  };
-
   state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
+    contacts: contactsData,
     filter: '',
   };
 
   formSubmitHandler = data => {
-    const myContacts = {
-      id: uuidv1(),
-      name: data.name,
-      number: data.number,
-    };
-
-    //проверяем дублируется контакт или нет при добавлении
-    const getContacts = this.state.contacts.map(contact =>
-      contact.name.toLocaleLowerCase(),
-    );
-
-    const isGetContactAlready = getContacts.includes(
-      data.name.toLocaleLowerCase(),
-    );
-
-    if (isGetContactAlready) {
-      alert(`${data.name} is already in contacts!`);
+    if (
+      this.state.contacts.some(
+        ({ name }) => name.toLowerCase() === data.name.toLowerCase(),
+      )
+    ) {
+      alert(`${data.name} is already in your contacts!`);
+    } else if (
+      this.state.contacts.find(({ number }) => number === data.number)
+    ) {
+      alert(`${data.name} is already in your contacts!`);
+    } else if (!/\d{3}[-]\d{2}[-]\d{2}/g.test(data.number)) {
+      alert(`Enter valid number please`);
     } else {
-      this.setState(prevState => {
-        return {
-          contacts: [...prevState.contacts, myContacts],
-        };
-      });
+      data.id = uuidv4();
+      this.setState(({ contacts }) => ({
+        contacts: [data, ...contacts],
+      }));
     }
   };
 
@@ -72,10 +45,11 @@ class App extends Component {
   };
 
   filterContactsByName = () => {
-    return this.state.contacts.filter(contact =>
+    const { contacts, filter } = this.state;
+    return contacts.filter(contact =>
       contact.name
         .toLocaleLowerCase()
-        .includes(this.state.filter.toLocaleLowerCase()),
+        .includes(filter.toLocaleLowerCase()),
     );
   };
 
